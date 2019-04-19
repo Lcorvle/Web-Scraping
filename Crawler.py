@@ -1,3 +1,18 @@
+from ctypes import *
+import os
+from urllib import request
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.chrome.options import Options
+import time
+import win32api
+import win32con
+
+
 class Crawler(object):
     """
     Wed crawler
@@ -10,7 +25,6 @@ class Crawler(object):
         self.driver = None
 
     def simple_scraping(self):
-        from urllib import request
         url = 'http://wsjs.saic.gov.cn/txnS01.do?y7bRbp=qmM60ZTGrmfFTNlWpVsGVJzNaFkX6j6kdsG47HvET_N1cCD6oa1Vn25OOxaXXsKRL0zNckk6r5b0f.CA3PlUlErkljZxgxs15suUISKeU1UjjJGnYT7iYfaWM7c5UrlAzmhSmSLuF8OCXkphqS79S6GCGqi&c1K5tw0w6_=2JwTPeGol02uJIEoS5AsnFj0nIDNIDLYHq.dvjno1tAr0uo69TWnCUjSDyXIKk2QUgW3a.5d5PvreevqPtlreFwiQotVSWxyEAZrm9OYRj9K0HF3TPJHIRv_hdqypDtJY'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
@@ -25,17 +39,11 @@ class Crawler(object):
         print(response.code)
         html = response.read().decode('utf-8')
         print(html)
-        print()
 
     def simulate_as_browser_scraping(self):
-        from urllib import request
         url = 'http://wsjs.saic.gov.cn/txnT01.do?locale=zh_CN&y7bRbP=KamgqGraQoraQoraQtseHtN0MLleD2DHQ3ohTdrMXxma'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
-            # 'Accept': 'text/html;q=0.9,*/*;q=0.8',
-            # 'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-            # 'Accept-Encoding': 'gzip',
-            # 'Connection': 'close',
             'Referer': 'http://wsjs.saic.gov.cn/txnT01.do?locale=zh_CN&y7bRbP=KamgqGraQoraQoraQtseHtN0MLleD2DHQ3ohTdrMXxma'  # 注意如果依然不能抓取，这里可以设置抓取网站的host
             }
         opener = request.Request(url, headers=headers)
@@ -43,104 +51,59 @@ class Crawler(object):
         print(response.code)
         html = response.read().decode('utf-8')
         print(html)
-        print()
 
     def phantomjs_scraping(self):
         chrome_path = "chromedriver.exe"
-        from selenium import webdriver
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        from selenium.webdriver.common.by import By
-        from bs4 import BeautifulSoup
-        from selenium.webdriver.chrome.options import Options
-        from selenium.webdriver.common.action_chains import ActionChains
 
         # 不加载图片,不缓存在硬盘(内存)
         SERVICE_ARGS = ['--load-images=true', '--disk-cache=false']
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         # 创建浏览器, 添加参数设置为无界面浏览器
-        driver = webdriver.Chrome(executable_path=chrome_path, service_args=SERVICE_ARGS, chrome_options=chrome_options, port=40)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+            'Referer': 'http://sbgg.saic.gov.cn:9080/tmann/annInfoView/annSearch.html?annNum=1605',
+            'Host': 'sbgg.saic.gov.cn:9080',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Origin': 'http://sbgg.saic.gov.cn:9080'
+        }
+
+        cap = dict(DesiredCapabilities.CHROME)
+
+        for key, value in headers.items():
+            cap['phantomjs.page.settings.' + key] = value
+        driver = webdriver.Chrome(executable_path=chrome_path, service_args=SERVICE_ARGS, chrome_options=chrome_options, port=40, desired_capabilities=cap)
+        driver.set_window_size(1400, 900)
         # 设置等待时间
         waite = WebDriverWait(driver, 5)
+
         driver.get('http://wsjs.saic.gov.cn')
         # driver.get('https://www.taobao.com')
         self.driver = driver
+        handle = driver.current_window_handle
         self.save_screen(0)
-        js = 'document.getElementsByTagName("table")[0].click()'
-        driver.execute_script(js)  # 执行js的方法
+        js = 'document.getElementsByTagName("a")[0].click()'    # 点击“关于使用商标网上查询系统的说明”
+        driver.execute_script(js)
         self.save_screen(1)
-        input1 = driver.find_element_by_css_selector('#nc')
-        input1.send_keys('9')
+        js = 'document.getElementsByTagName("a")[14].click()'   # 点击“首页”
+        driver.execute_script(js)
         self.save_screen(2)
-        input1 = driver.find_element_by_css_selector('#mn')
-        input1.send_keys('手机')
+        js = 'document.getElementsByTagName("a")[39].click()'   # 点击“网上查询”
+        driver.execute_script(js)
         self.save_screen(3)
-        js = 'document.getElementById("_searchButton").click()'
-        driver.execute_script(js)  # 执行js的方法
+        handles = driver.window_handles         # 切换到“商标查询”标签页
+        for new_handle in handles:
+            if new_handle != handle:
+                driver.switch_to_window(new_handle)
+                break
+        js = 'document.getElementsByTagName("a")[24].click()'    # 点击“我接受”
+        driver.execute_script(js)
         self.save_screen(4)
-        print()
-
-        page_num_div = driver.find_element_by_css_selector('#mainsrp-pager > div > div > div > div.total')
-        text = page_num_div.text
-        data = text[2:6]
-        print(data)
-
-        # 得到某一个宝贝,商品的大体信息
-        def get_product_info():
-            waite.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#mainsrp-itemlist .items .item')))
-            # 通过BeautifulSoup取数据
-            soup = BeautifulSoup(driver.page_source, 'lxml')
-            # 取所有的列表数据
-            item_lists = soup.select("#mainsrp-itemlist .items .item")
-            for item_list in item_lists:
-                item_dict = {}
-                image = item_list.select('.J_ItemPic.img')[0].attrs["data-src"]
-                if not image:
-                    image = item_list.select('.J_ItemPic.img')[0].attrs["data-ks-lazyload"]
-                # 销售地
-                location = item_list.select(".location")[0].text
-                # 价格
-                price = item_list.select(".price")[0].text
-                # 商店名称
-                shopname = item_list.select(".shopname")[0].text.strip()
-                # 宝贝名称
-                title = item_list.select('a[class="J_ClickStat"]')[0].text.strip()
-                # 链接
-                data_link = item_list.select('a[class="J_ClickStat"]')[0].attrs["href"]
-
-                item_dict["image"] = "https:" + image
-                item_dict["location"] = location
-                item_dict["shopname"] = shopname
-                item_dict["title"] = title
-                item_dict["data_link"] = "https:" + data_link
-                item_dict["price"] = price
-                print(item_dict)
-
-        # 切换下一页
-        def next_page(page):
-            print("当前正在加载第%s页的数据--------" % page)
-            try:
-                input = waite.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '#mainsrp-pager > div > div > div > div > input')))
-                input.clear()  # 清空输入框
-                # 页面框添加页码
-                input.send_keys(page)
-                # 找到确定按钮,点击确定
-                driver.find_element_by_css_selector(
-                    "#mainsrp-pager > div > div > div > div > span.btn.J_Submit").click()
-                waite.until(EC.text_to_be_present_in_element(
-                    (By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > ul.items > li.item.active"), str(page)))
-            except Exception as e:
-                print(e)
-                next_page(page)
-            # 当前切换后的页面的数据
-            get_product_info()
-
-        # data = get_page_num()
-        # print('总页数是=', data)
-        # for page in range(2, int(data) + 1):
-        #     next_page(page)
+        js = 'document.getElementById("nc").value = 9;'    # 设置输入框值
+        driver.execute_script(js)
+        self.save_screen(5)
 
         # 退出浏览器
         driver.quit()
@@ -148,8 +111,28 @@ class Crawler(object):
     def save_screen(self, index=0):
         if self.driver is None:
             return
-        import time
-        time.sleep(3)
+        time.sleep(5)
         self.driver.save_screenshot(self.driver.title + str(index) + ".png")
         print(self.driver.title + str(index))
 
+    def js_scraping(self):
+        class POINT(Structure):
+            _fields_ = [("x", c_ulong), ("y", c_ulong)]
+
+        po = POINT()
+
+        def mouse_move(x, y):
+            windll.user32.SetCursorPos(x, y)
+
+        def get_mouse_point():
+            windll.user32.GetCursorPos(byref(po))
+            return int(po.x), int(po.y)
+
+        os.system('"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" http://wsjs.saic.gov.cn')
+        time.sleep(5)
+        dx = 1
+        mouse_move(400, 400)
+        while True:
+            x, y = get_mouse_point()
+            mouse_move(x + dx, y)
+            dx = -dx

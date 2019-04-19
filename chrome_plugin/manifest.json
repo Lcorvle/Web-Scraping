@@ -1,0 +1,22 @@
+{
+	"name":"My first Extension",
+	"version":"1.0",
+
+	"manifest_version":2,
+	"description":"Hello World extension.",
+    "permissions": ["tabs", "http://wsjs.saic.gov.cn/*","https://*/*"],
+	"browser_action":{
+		"default_icon":"icon.png",
+		"default_popup":"popup.html"
+	},
+	"web_accessible_resources":[
+		"icon.png",
+		"popup.js"
+		],
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["crawler.js"]
+        }
+    ]
+	}
