@@ -58,7 +58,7 @@ class Crawler(object):
         # 不加载图片,不缓存在硬盘(内存)
         SERVICE_ARGS = ['--load-images=true', '--disk-cache=false']
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         # 创建浏览器, 添加参数设置为无界面浏览器
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
@@ -98,12 +98,13 @@ class Crawler(object):
             if new_handle != handle:
                 driver.switch_to_window(new_handle)
                 break
+        self.save_screen(4)
         js = 'document.getElementsByTagName("a")[24].click()'    # 点击“我接受”
         driver.execute_script(js)
-        self.save_screen(4)
+        self.save_screen(5)
         js = 'document.getElementById("nc").value = 9;'    # 设置输入框值
         driver.execute_script(js)
-        self.save_screen(5)
+        self.save_screen(6)
 
         # 退出浏览器
         driver.quit()
@@ -116,23 +117,23 @@ class Crawler(object):
         print(self.driver.title + str(index))
 
     def js_scraping(self):
-        class POINT(Structure):
-            _fields_ = [("x", c_ulong), ("y", c_ulong)]
-
-        po = POINT()
-
-        def mouse_move(x, y):
-            windll.user32.SetCursorPos(x, y)
-
-        def get_mouse_point():
-            windll.user32.GetCursorPos(byref(po))
-            return int(po.x), int(po.y)
+        # class POINT(Structure):
+        #     _fields_ = [("x", c_ulong), ("y", c_ulong)]
+        #
+        # po = POINT()
+        #
+        # def mouse_move(x, y):
+        #     windll.user32.SetCursorPos(x, y)
+        #
+        # def get_mouse_point():
+        #     windll.user32.GetCursorPos(byref(po))
+        #     return int(po.x), int(po.y)
 
         os.system('"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" http://wsjs.saic.gov.cn')
-        time.sleep(5)
-        dx = 1
-        mouse_move(400, 400)
-        while True:
-            x, y = get_mouse_point()
-            mouse_move(x + dx, y)
-            dx = -dx
+        # time.sleep(5)
+        # dx = 1
+        # mouse_move(400, 400)
+        # while True:
+        #     x, y = get_mouse_point()
+        #     mouse_move(x + dx, y)
+        #     dx = -dx

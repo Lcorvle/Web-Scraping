@@ -177,23 +177,26 @@ var saveAs = saveAs || (function(view) {
 	|| this
 ));
 
-var search =  function (value_to_search) {
+var search =  function (nc, mn) {
   console.log("准备爬取");
   setTimeout(function () {
 
       if (document.title == "商标网上检索系统") {
-  				alert("5秒开始爬取，请保持鼠标在浏览器界面。");
           console.log(document.title + "=商标网上检索系统");
-          setTimeout(function () {
-						document.getElementsByTagName('table')[0].click();
-          }, 5000);
+          document.getElementsByTagName('table')[0].click();
       }
       else if (document.title == "商标近似检索") {
+      		var x = window.innerWidth / 2.0, y = window.innerHeight / 2.0;
+      		for (var i = 0;i < 50;i++) {
+      			var e = document.createEvent("MouseEvents");
+      			e.initMouseEvent("mousemove", true, true, window, 1, x + 1, y + 1, x + 1, y + 1, false, false, false, false, 0, null);
+      			document.dispatchEvent(e);
+					}
           console.log(document.title + "=商标近似检索");
-          document.getElementById("nc").value = 9;
+          document.getElementById("nc").value = nc;
           document.getElementById("nc").focus();
           document.getElementById("nc").click();
-          document.getElementById("mn").value = value_to_search;
+          document.getElementById("mn").value = mn;
           document.getElementById("mn").focus();
           document.getElementById("mn").click();
           // document.getElementById("nc").click();
@@ -235,7 +238,7 @@ var search =  function (value_to_search) {
                 }
               }
               var text = res.join('\n');
-              var filename = 'crawler_result.txt';
+              var filename = 'crawler_result_国际分类=' + nc + '_商标名称=' + mn + '.txt';
               var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
               saveAs(blob, filename);
               console.log("爬取结束，共" + res.length+ "条商标数据。");
@@ -246,5 +249,5 @@ var search =  function (value_to_search) {
   , 5000);
 };
 
-search("手机");
+search(9, "手机");
 
